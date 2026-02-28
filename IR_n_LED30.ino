@@ -1,7 +1,7 @@
 // Created by RadBench: youtube.com/radbenchyt
 // Made for A flux Capacitor with a 10 light NanoLed strip
 // Modifed by seventy4burban youtube.com/seventyburban
-// Modifications for Delorean car install.  Sound effect changes, updates to code
+// Modifications for Delorean car install.  Sound effect changes, updates to IR code
 
 // DFPlayer Stuff
 #include "Arduino.h"
@@ -17,11 +17,12 @@ void printDetail(uint8_t type, int value);
 
 //IR
 
-//uint32_t Previous;
+uint32_t Previous;
 #include <IRremote.hpp>
 #define IR_RECEIVE_PIN 3 // Initialize pin 3 as the receiver pin
-//IRrecv irrecv(receiver); //Create new instance of receiver
-//decode_results results;
+//IrReceiver(receiver); //Create new instance of receiver
+bool isPlaying = false;
+decode_results results;
 
 //Remote Buttons
 #define IR_BUTTON_POWER 0x45
@@ -94,11 +95,18 @@ void setup() {
   }
   Serial.println(F("DFPlayer Mini online"));
 
-  myDFPlayer.volume(10);  //Set volume value (0 to 30)
-  
+  myDFPlayer.volume(20);  //Set volume value (0 to 30)
+
+//  myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
+//  myDFPlayer.EQ(DFPLAYER_EQ_POP);
+  myDFPlayer.EQ(DFPLAYER_EQ_ROCK);
+//  myDFPlayer.EQ(DFPLAYER_EQ_JAZZ);
+//  myDFPlayer.EQ(DFPLAYER_EQ_CLASSIC);
+//  myDFPlayer.EQ(DFPLAYER_EQ_BASS);
+
   // STARTUP SOUND AND CHASE
-  myDFPlayer.play(1);  //Play mp3 
-  delay(600);
+  myDFPlayer.playFolder(1, 1);  //Play flux capacitor sound
+  delay(200);
   radChase2 = 1;
 
   // End DFPLayer Setup
@@ -118,9 +126,9 @@ void setup() {
 
 void loop() {
   if (IrReceiver.decode()) {
-  IrReceiver.resume();
-  int command = IrReceiver.decodedIRData.command;
-    switch (command) {
+   IrReceiver.resume();
+   int command = IrReceiver.decodedIRData.command;
+   switch (command) {
       case IR_BUTTON_POWER: {
         Serial.println("Pressed POWER");
         Serial.println("Power Off");
@@ -140,6 +148,7 @@ void loop() {
 
       case IR_BUTTON_0: {
         Serial.println("Pressed 0");
+        myDFPlayer.playFolder(1, 1);  //Play flux capacitor sound
         break;
       }
     
@@ -156,16 +165,12 @@ void loop() {
         rainbowChase = 0;
         // set delay speed for time travel
         delaySpeed = 113;
-        // play audio track 1
-        myDFPlayer.playMp3Folder(1); //play specific mp3 in SD:/MP3/0001.mp3; File Name(0~65535)
         break;
       }
 
       case IR_BUTTON_2: {
         Serial.println("Pressed 2");
         Serial.println("Smooth Chase");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(1);
         timeTravel = 0;
         smoothChase = 1;
         movieChase = 0;
@@ -181,8 +186,6 @@ void loop() {
       case IR_BUTTON_3: {
         Serial.println("Pressed 3");
         Serial.println("30 FPS");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(1);
         // set movie speed
         movieSpeed = 33.33;
         timeTravel = 0;
@@ -200,8 +203,6 @@ void loop() {
         Serial.println("Pressed 4");
         Serial.println("24 FPS");
         Serial.println("Imitating 6 LED from the A Car");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(1);
         // set movie speed
         movieSpeed = 22.97;
         // set loop
@@ -219,8 +220,6 @@ void loop() {
       case IR_BUTTON_5: {
         Serial.println("Pressed 5");
         Serial.println("24 FPS Simple");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(1);
         // set movie speed
         movieSpeed = 34.45;
         // set loop
@@ -238,8 +237,6 @@ void loop() {
       case IR_BUTTON_6: {
         Serial.println("Pressed 6");
         Serial.println("Rad Chase");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(1);
         // set movie speed
         movieSpeed = 66.66;
         // set loop
@@ -257,8 +254,6 @@ void loop() {
       case IR_BUTTON_7: {
         Serial.println("Pressed 7");
         Serial.println("Rad Chase");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(1);
         //set movie speed
         movieSpeed = 66.66;
         // set loop
@@ -276,8 +271,6 @@ void loop() {
       case IR_BUTTON_8: {
         Serial.println("Pressed 8");
         Serial.println("Rainbow Chase");
-        myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(5);
         //set movie speed
         movieSpeed = 66.66;
         // set loop
@@ -296,17 +289,22 @@ void loop() {
         Serial.println("Pressed 9");
         Serial.println("Play Soundtrack");
         myDFPlayer.stop();
-        myDFPlayer.playMp3Folder(2);
+        myDFPlayer.loopFolder(2);
+        //delay(300);
         break;
       }
 
       case IR_BUTTON_VOLUP: {
         Serial.println("Pressed Volume Up");
+        myDFPlayer.volumeUp();
+        delay(1000);
         break;
       }
 
       case IR_BUTTON_VOLDN: {
         Serial.println("Pressed Volume Down");
+        myDFPlayer.volumeDown();
+        delay(1000);
         break;
       }
 
@@ -340,23 +338,29 @@ void loop() {
 
       case IR_BUTTON_PAUSE: {
         Serial.println("Pressed Play/Pause");
-        break;
+        myDFPlayer.pause();
+        delay(1000);
       }
 
       case IR_BUTTON_PREV: {
         Serial.println("Pressed Previous Track");
+        myDFPlayer.previous();
+        delay(1000);
         break;
       }
 
       case IR_BUTTON_NEXT: {
         Serial.println("Pressed Next Track");
+        myDFPlayer.next();
+        delay(1000);
         break;
       }
-
+      
       while (!IrReceiver.isIdle());  // if not idle, wait till complete
       IrReceiver.resume(); // next value
     }
   }
+
 
 
   // ----------------- SMOOTH CHASE ------------------------
@@ -861,4 +865,3 @@ void loop() {
     }
 
 }
-
