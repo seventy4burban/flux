@@ -1,7 +1,18 @@
 // Created by RadBench: youtube.com/radbenchyt
 // Made for a  Flux Capacitor with a 10 light NanoLed strip
-// Modifed by seventy4burban youtube.com/seventyburban
-// Modifications for Delorean car install.  Sound effect changes, updates to IR library and code
+// Modifications by seventy4burban: youtube.com/seventyburban include
+// -Updated libaries and code 
+// -Changes for DeLorean car install
+// -Light Test Mode
+// -Sound effects removed and electronic flux sound added
+// -Full trilogy soundtrack added
+// -Light colors modeified to closer match screen used cars
+// -Time travel effect modified to be closer to screen used cars
+
+// Current libaries
+// DFRobotDFPlayerMini V1.0.6
+// FastLED v3.10.3
+// IRremote v4.7.01 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,19 +29,16 @@ void printDetail(uint8_t type, int value);
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-//IR
+// IR
 
-//uint32_t Previous;
+uint32_t Previous;
 #include <IRremote.hpp>
 
 // Initialize pin 3 as the receiver pin
 #define IR_RECEIVE_PIN 3
-
-//IrReceiver(receiver); //Create new instance of receiver
-//bool isPlaying = false;
 decode_results results;
 
-//Remote Buttons
+// Remote Buttons
 #define IR_BUTTON_POWER 0x45
 #define IR_BUTTON_0 0x16
 #define IR_BUTTON_1 0xC
@@ -71,7 +79,6 @@ int delaySpeed = 80;
 const unsigned long eventInterval = 1000;
 unsigned long previousTime = 0;
 
-  int eightyEightMph;
   int timeTravel;
   int smoothChase;
   int movieChase;
@@ -81,10 +88,16 @@ unsigned long previousTime = 0;
   int radChase;
   int radChase2;
   int rainbowChase;
+  int testMode;
 
 
 // This is an array of leds.  One item for each led in your strip.
 CRGB leds[NUM_LEDS];
+
+// Speedometer Stuff
+const int analogPin = A0;  //Defines the analog input pin
+const int threshold = 982; //Defines the threshold value (approximately 4.8VDC)
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -92,9 +105,6 @@ void setup() {
 
   // Single LED
   pinMode(12, OUTPUT);
-
-  // Input from Speedometer
-  pinMode(7, INPUT); //5VDC input at 88MPH
 
   // DFPlayer Setup
   mySoftwareSerial.begin(9600);
@@ -125,8 +135,6 @@ void setup() {
 
   // IR setup
   Serial.begin(9600);
-
-  //irrecv.enableIRIn(); //Start the receiver
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); // Start the receiver
   
   // LED Setup ///////////////////////////////////////////////////////
@@ -134,15 +142,16 @@ void setup() {
   FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
   FastLED.setBrightness(BRIGHTNESS);
   FastLED.clear();
-
 }
 
 void loop() {
   
+  while (!IrReceiver.isIdle());  // if not idle, wait till complete
+
   unsigned long lastPressTime = 0;
   if (IrReceiver.decode()) {
     if (millis() - lastPressTime > 300) { // 300ms debounce
-      // Process code
+      // Remote Control Button Functions
       int command = IrReceiver.decodedIRData.command;
       switch (command) {
         case IR_BUTTON_POWER: 
@@ -150,13 +159,14 @@ void loop() {
           Serial.println("Power Off");
           myDFPlayer.stop();
           timeTravel = 0;
-          thirtyChase = 0;
           smoothChase = 0;
+          thirtyChase = 0;
           movieChase = 0;
           movieChaseSimple = 0;
           radChase = 0;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           FastLED.clear();
           FastLED.show();
           delaySpeed = 20;
@@ -176,12 +186,13 @@ void loop() {
           Serial.println("Time Travel");
           timeTravel = 1;
           smoothChase = 0;
-          movieChase = 0;
           thirtyChase = 0;
+          movieChase = 0;
           movieChaseSimple = 0;
           radChase = 0;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           // set delay speed for time travel
           delaySpeed = 113;
           break;
@@ -191,12 +202,13 @@ void loop() {
           Serial.println("Smooth Chase");
           timeTravel = 0;
           smoothChase = 1;
+          thirtyChase = 0;
           movieChase = 0;
           movieChaseSimple = 0;
-          thirtyChase = 0;
           radChase = 0;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           delaySpeed = 20;
           break;
       
@@ -207,12 +219,13 @@ void loop() {
           movieSpeed = 33.33;
           timeTravel = 0;
           smoothChase = 0;
+          thirtyChase = 1;
           movieChase = 0;
           movieChaseSimple = 0;
-          thirtyChase = 1;
           radChase = 0;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           delaySpeed = 20;
           break;
       
@@ -224,13 +237,14 @@ void loop() {
           movieSpeed = 22.97;
           // set loop
           timeTravel = 0;
-          thirtyChase = 0;
           smoothChase = 0;
+          thirtyChase = 0;
           movieChase = 1;
           movieChaseSimple = 0;
           radChase = 0;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           delaySpeed = 20;
           break;
       
@@ -241,13 +255,14 @@ void loop() {
           movieSpeed = 34.45;
           // set loop
           timeTravel = 0;
-          thirtyChase = 0;
           smoothChase = 0;
+          thirtyChase = 0;
           movieChase = 0;
           movieChaseSimple = 1;
           radChase = 0;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           delaySpeed = 20;
           break;
       
@@ -258,13 +273,14 @@ void loop() {
           movieSpeed = 66.66;
           // set loop
           timeTravel = 0;
-          thirtyChase = 0;
           smoothChase = 0;
+          thirtyChase = 0;
           movieChase = 0;
           movieChaseSimple = 0;
           radChase = 1;
           radChase2 = 0;
           rainbowChase = 0;
+          testMode = 0;
           delaySpeed = 20;
           break;
       
@@ -275,30 +291,32 @@ void loop() {
           movieSpeed = 66.66;
           // set loop
           timeTravel = 0;
-          thirtyChase = 0;
           smoothChase = 0;
+          thirtyChase = 0;
           movieChase = 0;
           movieChaseSimple = 0;
           radChase = 0;
           radChase2 = 1;
           rainbowChase = 0;
+          testMode = 0;
           delaySpeed = 20;
           break;
       
         case IR_BUTTON_8: 
           Serial.println("Pressed 8");
-          Serial.println("Rainbow Chase");
+          Serial.println("Test Mode");
           //set movie speed
           movieSpeed = 66.66;
           // set loop
           timeTravel = 0;
-          thirtyChase = 0;
           smoothChase = 0;
+          thirtyChase = 0;
           movieChase = 0;
           movieChaseSimple = 0;
           radChase = 0;
           radChase2 = 0;
-          rainbowChase = 1;
+          rainbowChase = 0;
+          testMode = 1;
           delaySpeed = 20;
           break;
 
@@ -370,17 +388,232 @@ void loop() {
     IrReceiver.resume();
   }
 
-  if (digitalRead(7) == HIGH) {
-    eightyEightMph = 1;
-    // set delay speed for time travel
-    delaySpeed = 113;
-  } 
+  //Speedometer to Flux Capacitor Control  
+  int sensorValue = analogRead(analogPin); //Read Speedometer Input Voltage
 
-  if (digitalRead(7) ==LOW) {
-    eightyEightMph = 0;
+  if (sensorValue >= threshold) {
+    for (int i = 0; i < 10; i++) {
+
+        FastLED.setBrightness(MAX_BRIGHT);
+        leds[i] = CHSV(28, 170, 100);
+        leds[10] = CRGB::White;
+        leds[11] = CRGB::White;
+        leds[12] = CRGB::White;
+        leds[13] = CRGB::White;
+        leds[14] = CRGB::White;
+        leds[15] = CRGB::White;
+        leds[16] = CRGB::White;
+        leds[17] = CRGB::White;
+        leds[18] = CRGB::White;
+        leds[19] = CRGB::White;
+        leds[20] = CRGB::White;
+        leds[21] = CRGB::White;
+        
+       FastLED.show();
+      }
+     
+      // Single LED
+      digitalWrite(12, HIGH);
+      delay(300);
+      FastLED.clear();
+      FastLED.show();
+      
+      // Single LED
+      digitalWrite(12, LOW);
+      delay(400);
+
+      // Second Burst
+      for (int i = 0; i < 21; i++) {
+        FastLED.setBrightness(MAX_BRIGHT);
+        leds[i] = CHSV(28, 170, 100);
+        leds[10] = CRGB::White;
+        leds[11] = CRGB::White;
+        leds[12] = CRGB::White;
+        leds[13] = CRGB::White;
+        leds[14] = CRGB::White;
+        leds[15] = CRGB::White;
+        leds[16] = CRGB::White;
+        leds[17] = CRGB::White;
+        leds[18] = CRGB::White;
+        leds[19] = CRGB::White;
+        leds[20] = CRGB::White;
+        leds[21] = CRGB::White;
+        FastLED.show();
+      }
+      
+      // Single LED
+      digitalWrite(12, HIGH);
+      delay(1000);
+      delaySpeed = 80;
+      timeTravel = 0;
+      radChase2 = 1;
+      FastLED.clear();
+      FastLED.show();
+      
+      // Single LED
+      digitalWrite(12, LOW);
+      FastLED.setBrightness(BRIGHTNESS);
+      //          chase();
+      //          exit(0);
+      //          reset();    
   }
+    Serial.println("88 MPH, initating Flux Capacitor");
+  
 
-  // ----------------- SMOOTH CHASE ------------------------
+  delay(100);
+
+  //-----------------TimeTravel (Button 1)------------------------
+
+  if (timeTravel == 1) {
+
+    unsigned long currentTime = millis();
+
+    FastLED.setBrightness(BRIGHTNESS);
+    // Move LEDS
+    for (int i = 0; i < 20; i = i + 1) {
+
+      if (i - 6 >= 0) {
+        leds[i - 6] = CHSV(28, 170, 60);
+      }
+      if (i - 5 >= 0) {
+        leds[i - 5] = CHSV(28, 170, 100);
+      }
+      if (i - 4 >= 0) {
+        leds[i - 4] = CHSV(28, 170, 160);
+      }
+      if (i - 3 >= 0) {
+        leds[i - 3] = CHSV(28, 170, 220);
+      }
+      if (i - 2 >= 0) {
+        leds[i - 2] = CHSV(28, 170, 160);
+      }
+      if (i - 1 >= 0) {
+        leds[i - 1] = CHSV(28, 170, 100);
+      }
+      leds[i] = CHSV(28, 170, 60);
+      leds[10] = CRGB::Black;
+      leds[11] = CRGB::Black;
+      leds[12] = CRGB::Black;
+      leds[13] = CRGB::Black;
+      leds[14] = CRGB::Black;
+      leds[15] = CRGB::Black;
+      leds[16] = CRGB::Black;
+      leds[17] = CRGB::Black;
+      leds[18] = CRGB::Black;
+      leds[19] = CRGB::Black;
+      leds[20] = CRGB::Black;
+      leds[21] = CRGB::Black;
+
+
+      // Show the leds
+
+      FastLED.show();
+
+      FastLED.clear();
+      timeTravel = 1;
+
+      // Wait a little bit
+      delay(delaySpeed);
+
+    }
+
+    // Reduce delay time so each sequence is faster than the last
+    delaySpeed = delaySpeed * .837;
+
+    if (delaySpeed < 1) {
+      // leds[5] = CRGB::Black;
+
+      previousTime = millis();
+
+      if (millis() < previousTime + 4000) {
+        // ZIIIP!  Moment of time travel
+                
+        digitalWrite(12, HIGH);
+        for(int y = 0; y < 22; y++) {
+          FastLED.setBrightness(MAX_BRIGHT);
+          leds[y] = CRGB::White;
+          FastLED.show();
+          }
+                
+          delay(3300);
+          FastLED.clear();
+          FastLED.show();
+          //for(int x = 0; x < 9; x++) {
+          //leds[x] = CRGB::Black;
+          //FastLED.show();
+          //}
+          // Single LED
+          digitalWrite(12, LOW);
+          // Delay after white light
+          delay(850);
+        }
+      // First Burst
+      for (int i = 0; i < 10; i++) {
+        FastLED.setBrightness(MAX_BRIGHT);
+        leds[i] = CHSV(28, 170, 100);
+        leds[10] = CRGB::White;
+        leds[11] = CRGB::White;
+        leds[12] = CRGB::White;
+        leds[13] = CRGB::White;
+        leds[14] = CRGB::White;
+        leds[15] = CRGB::White;
+        leds[16] = CRGB::White;
+        leds[17] = CRGB::White;
+        leds[18] = CRGB::White;
+        leds[19] = CRGB::White;
+        leds[20] = CRGB::White;
+        leds[21] = CRGB::White;
+        
+       FastLED.show();
+      }
+     
+      // Single LED
+      digitalWrite(12, HIGH);
+      delay(300);
+      FastLED.clear();
+      FastLED.show();
+      // Single LED
+      digitalWrite(12, LOW);
+      delay(400);
+
+      // Second Burst
+      for (int i = 0; i < 21; i++) {
+        FastLED.setBrightness(MAX_BRIGHT);
+        leds[i] = CHSV(28, 170, 100);
+        leds[10] = CRGB::White;
+        leds[11] = CRGB::White;
+        leds[12] = CRGB::White;
+        leds[13] = CRGB::White;
+        leds[14] = CRGB::White;
+        leds[15] = CRGB::White;
+        leds[16] = CRGB::White;
+        leds[17] = CRGB::White;
+        leds[18] = CRGB::White;
+        leds[19] = CRGB::White;
+        leds[20] = CRGB::White;
+        leds[21] = CRGB::White;
+        FastLED.show();
+      }
+      
+      // Single LED
+      digitalWrite(12, HIGH);
+      delay(1000);
+      delaySpeed = 80;
+      timeTravel = 0;
+      radChase2 = 1;
+      FastLED.clear();
+      FastLED.show();
+      // Single LED
+      digitalWrite(12, LOW);
+      FastLED.setBrightness(BRIGHTNESS);
+      //          chase();
+      //          exit(0);
+      //          reset();
+    }
+  } 
+  // ----------------- END timeTravel ------------------------------
+
+  //-----------------SMOOTH CHASE (Button 2)------------------------
 
   if (smoothChase == 1) {
     timeTravel = 0;
@@ -466,7 +699,57 @@ void loop() {
     }
   }
 
-  // ----------------- MOVIE CHASE - imitates 6 LEDs - matches 24fps speed from the movie------------------------
+  //-----------------THIRTY FPS CHASE (Button 3) - For shooting at 30fps------------------------
+
+  if (thirtyChase == 1) {
+
+    timeTravel = 0;
+    smoothChase = 0;
+
+    FastLED.setBrightness(BRIGHTNESS);
+    // Move LEDS
+    for (int i = 0; i < 5; i = i + 1) {
+
+      if(i = 1) {
+        leds[0] = CHSV(32, 128, 100);
+        leds[1] = CHSV(32, 128, 100);
+        leds[2] = CHSV(32, 128, 15);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      if(i = 2) {
+        leds[2] = CHSV(32, 128, 15);
+        leds[3] = CHSV(32, 128, 100);
+        leds[4] = CHSV(32, 128, 100);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      if(i = 3) {
+        leds[5] = CHSV(32, 128, 100);
+        leds[6] = CHSV(32, 128, 100);
+        leds[7] = CHSV(32, 128, 15);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      if(i = 4) {
+        leds[7] = CHSV(32, 128, 15);
+        leds[8] = CHSV(32, 128, 100);
+        leds[9] = CHSV(32, 128, 100);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+        
+      thirtyChase = 1;
+
+    }
+    
+  }
+
+  //----------------- MOVIE CHASE (Button 4) - imitates 6 LEDs - matches 24FPS speed from the movie------------------------
 
   if (movieChase == 1) {
     timeTravel = 0;
@@ -533,9 +816,53 @@ void loop() {
     }
   }
 
-  // ----------------- RAD CHASE ------------------------
+  //----------------- MOVIE CHASE SIMPLE (Button 5)------------------------
+
+  if (movieChaseSimple == 1) {
+
+    timeTravel = 0;
+    smoothChase = 0;
+ 
+    FastLED.setBrightness(BRIGHTNESS);
+    // Move LEDS
+    for (int i = 0; i < 5; i = i + 1) {
+
+      if(i = 1) {
+        leds[2] = CHSV(28, 170, 100);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      if(i = 2) {
+        leds[4] = CHSV(28, 170, 100);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      if(i = 3) {
+        leds[6] = CHSV(28, 170, 100);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      if(i = 4) {
+        leds[8] = CHSV(28, 170, 100);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+        
+      movieChaseSimple = 1;
+
+    }
+  }
+
+  //-----------------RAD CHASE (Button 6)------------------------
 
   if (radChase == 1) {
+
+    timeTravel = 0;
+    smoothChase = 0;
 
     FastLED.setBrightness(BRIGHTNESS);
     // Move LEDS
@@ -582,9 +909,12 @@ void loop() {
     }
   }
 
-  // ----------------- RAD CHASE 2------------------------
+  //-----------------RAD CHASE 2 (Button 7)------------------------
 
   if (radChase2 == 1) {
+
+    timeTravel = 0;
+    smoothChase = 0;
 
     FastLED.setBrightness(BRIGHTNESS);
     // Move LEDS
@@ -604,253 +934,34 @@ void loop() {
     }
   }
 
-  // ----------------- MOVIE CHASE SIMPLE ------------------------
+  //-----------------RAINBOW CHASE (Button 8)------------------------
 
-  if (movieChaseSimple == 1) {
- 
-    FastLED.setBrightness(BRIGHTNESS);
-    // Move LEDS
-    for (int i = 0; i < 5; i = i + 1) {
+  if (rainbowChase == 1) {
 
-      if(i = 1) {
-        leds[2] = CHSV(28, 170, 100);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-      if(i = 2) {
-        leds[4] = CHSV(28, 170, 100);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-      if(i = 3) {
-        leds[6] = CHSV(28, 170, 100);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-      if(i = 4) {
-        leds[8] = CHSV(28, 170, 100);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-        
-      movieChaseSimple = 1;
-
-    }
-  }
-
-  // ----------------- THIRTY FPS CHASE - For shooting at 30fps------------------------
-
-  if (thirtyChase == 1) {
-
-    FastLED.setBrightness(BRIGHTNESS);
-    // Move LEDS
-    for (int i = 0; i < 5; i = i + 1) {
-
-      if(i = 1) {
-        leds[0] = CHSV(32, 128, 100);
-        leds[1] = CHSV(32, 128, 100);
-        leds[2] = CHSV(32, 128, 15);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-      if(i = 2) {
-        leds[2] = CHSV(32, 128, 15);
-        leds[3] = CHSV(32, 128, 100);
-        leds[4] = CHSV(32, 128, 100);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-      if(i = 3) {
-        leds[5] = CHSV(32, 128, 100);
-        leds[6] = CHSV(32, 128, 100);
-        leds[7] = CHSV(32, 128, 15);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-      if(i = 4) {
-        leds[7] = CHSV(32, 128, 15);
-        leds[8] = CHSV(32, 128, 100);
-        leds[9] = CHSV(32, 128, 100);
-        FastLED.show();
-        delay(movieSpeed);
-        FastLED.clear();
-      }
-        
-      thirtyChase = 1;
-
-    }
-    
-  }
-
-  // ----------------- TimeTravel ------------------------
-
-  if (timeTravel == 1) {
-
-    unsigned long currentTime = millis();
-
-    FastLED.setBrightness(BRIGHTNESS);
-    // Move LEDS
-    for (int i = 0; i < 20; i = i + 1) {
-
-      if (i - 6 >= 0) {
-        leds[i - 6] = CHSV(28, 170, 60);
-      }
-      if (i - 5 >= 0) {
-        leds[i - 5] = CHSV(28, 170, 100);
-      }
-      if (i - 4 >= 0) {
-        leds[i - 4] = CHSV(28, 170, 160);
-      }
-      if (i - 3 >= 0) {
-        leds[i - 3] = CHSV(28, 170, 220);
-      }
-      if (i - 2 >= 0) {
-        leds[i - 2] = CHSV(28, 170, 160);
-      }
-      if (i - 1 >= 0) {
-        leds[i - 1] = CHSV(28, 170, 100);
-      }
-      leds[i] = CHSV(28, 170, 60);
-      leds[10] = CRGB::Black;
-      leds[11] = CRGB::Black;
-      leds[12] = CRGB::Black;
-      leds[13] = CRGB::Black;
-      leds[14] = CRGB::Black;
-      leds[15] = CRGB::Black;
-      leds[16] = CRGB::Black;
-      leds[17] = CRGB::Black;
-      leds[18] = CRGB::Black;
-      leds[19] = CRGB::Black;
-      leds[20] = CRGB::Black;
-      leds[21] = CRGB::Black;
-
-
-      // Show the leds
-
-      FastLED.show();
-
-      FastLED.clear();
-      timeTravel = 1;
-
-      // Wait a little bit
-      delay(delaySpeed);
-
-    }
-
-    // Reduce delay time so each sequence is faster than the last
-    delaySpeed = delaySpeed * .837;
-
-    if (delaySpeed < 1) {
-      // leds[5] = CRGB::Black;
-
-      previousTime = millis();
-
-      if (millis() < previousTime + 4000) {
-        // ZIIIP!  Moment of time travel
-                
-        digitalWrite(12, HIGH);
-        for(int y = 0; y < 22; y++) {
-          FastLED.setBrightness(MAX_BRIGHT);
-          leds[y] = CRGB::White;
-          FastLED.show();
-          }
-                
-          delay(3300);
-          FastLED.clear();
-          FastLED.show();
-          //for(int x = 0; x < 9; x++) {
-          //leds[x] = CRGB::Black;
-          //FastLED.show();
-          //}
-          // Single LED
-          digitalWrite(12, LOW);
-          // Delay after blue light
-          delay(850);
-        }
-      // First Burst
+  
       for (int i = 0; i < 10; i++) {
-        FastLED.setBrightness(MAX_BRIGHT);
-        leds[i] = CHSV(28, 170, 100);
-        leds[10] = CRGB::White;
-        leds[11] = CRGB::White;
-        leds[12] = CRGB::White;
-        leds[13] = CRGB::White;
-        leds[14] = CRGB::White;
-        leds[15] = CRGB::White;
-        leds[16] = CRGB::White;
-        leds[17] = CRGB::White;
-        leds[18] = CRGB::White;
-        leds[19] = CRGB::White;
-        leds[20] = CRGB::White;
-        leds[21] = CRGB::White;
-        
-       FastLED.show();
+        leds[i] = CHSV(hue + (i * 10), 255, 150);
       }
-     
-      // Single LED
-      digitalWrite(12, HIGH);
-      delay(300);
-      FastLED.clear();
-      FastLED.show();
-      // Single LED
-      digitalWrite(12, LOW);
-      delay(400);
-
-      // Second Burst
-      for (int i = 0; i < 21; i++) {
-        FastLED.setBrightness(MAX_BRIGHT);
-        leds[i] = CHSV(28, 170, 100);
-        leds[10] = CRGB::White;
-        leds[11] = CRGB::White;
-        leds[12] = CRGB::White;
-        leds[13] = CRGB::White;
-        leds[14] = CRGB::White;
-        leds[15] = CRGB::White;
-        leds[16] = CRGB::White;
-        leds[17] = CRGB::White;
-        leds[18] = CRGB::White;
-        leds[19] = CRGB::White;
-        leds[20] = CRGB::White;
-        leds[21] = CRGB::White;
-        FastLED.show();
+      for (int y = 10; y > 9 && y < 22; ++y) {
+        leds[y] = CHSV(hue + (y * 10), 255, 250);
+      }
+    
+      //You can change the pattern speed here
+      EVERY_N_MILLISECONDS(1){
+        hue++;
       }
       
-      // Single LED
-      digitalWrite(12, HIGH);
-      delay(1000);
-      delaySpeed = 80;
-      timeTravel = 0;
-      radChase2 = 1;
-      FastLED.clear();
       FastLED.show();
-      // Single LED
-      digitalWrite(12, LOW);
-      FastLED.setBrightness(BRIGHTNESS);
-      //          chase();
-      //          exit(0);
-      //          reset();
-
-
-
-
-
+      rainbowChase = 1;
     }
-  } 
 
-  // ----------------- END timeTravel --------------------
-
-  // ----------------- Test Mode / Rainbow Chase ------------------------
-
-  //Test 3 Parallel strips of 10 LEDS (relays) and 4 blocks of 3 LEDs (Door) in series
-  if (rainbowChase ==1) {
+  //-----------------Test Mode (Button 8)------------------------
+  // Test 3 Parallel strips of 10 LEDS (relays) and 4 blocks of 3 LEDs (Door) and 4 Center LEDs in series
+  
+  if (testMode ==1) {
   FastLED.setBrightness(MAX_BRIGHT);
+  fill_solid(leds, NUM_LEDS, CRGB::White);
+  /*
   leds[0] = CRGB(204, 47, 0);
   leds[1] = CRGB(219, 102, 0);
   leds[2] = CRGB(227, 158, 0);
@@ -873,29 +984,11 @@ void loop() {
   leds[19] = CRGB::Red;
   leds[20] = CRGB::Green;
   leds[21] = CRGB::Blue;
+  */
   
   FastLED.show();
 
-  rainbowChase = 1;
-
-
+  testMode = 1;
   }
-
-  /*if (rainbowChase == 1) {
-    for (int i = 0; i < 10; i++) {
-      leds[i] = CHSV(hue + (i * 10), 255, 150);
-    }
-    for (int y = 10; y > 9 && y < 22; ++y) {
-      leds[y] = CHSV(hue + (y * 10), 255, 250);
-    }
-    
-    //You can change the pattern speed here
-    EVERY_N_MILLISECONDS(1){
-      hue++;
-    }
-    
-    FastLED.show();
-    //rainbowChase = 1;
-  }*/
 
 }
