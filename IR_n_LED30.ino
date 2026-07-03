@@ -1,6 +1,6 @@
 // Created by RadBench: youtube.com/radbenchyt
 // Made for a  Flux Capacitor with a 10 light NanoLed strip
-// Modifications by seventy4burban: youtube.com/seventyburban include
+// Modifed by seventy4burban youtube.com/seventyburban include
 // -Updated libaries and code 
 // -Changes for DeLorean car install
 // -Light Test Mode
@@ -72,7 +72,8 @@ uint8_t hue = 0;
 #define VOLTS 5 // max voltage
 #define MAX_AMPS 4500 //value in milliamps
 #define BRIGHTNESS 60
-#define MAX_BRIGHT 255 
+#define MAX_BRIGHT 255
+#define MIN_BRIGHT 20 
 #define ledColor Yellow
 
 int delaySpeed = 80;
@@ -82,7 +83,7 @@ unsigned long previousTime = 0;
   int timeTravel;
   int smoothChase;
   int movieChase;
-  int movieSpeed = 34.45;
+  int movieSpeed = 66.66;
   int movieChaseSimple;
   int thirtyChase;
   int radChase;
@@ -96,7 +97,7 @@ CRGB leds[NUM_LEDS];
 
 // Speedometer Stuff
 const int analogPin = A0;  //Defines the analog input pin
-const int threshold = 982; //Defines the threshold value (approximately 4.8VDC)
+const int threshold = 1023; //Defines the threshold value (approximately 4.9VDC)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -122,15 +123,15 @@ void setup() {
   }
   Serial.println(F("DFPlayer Mini online"));
 
-  myDFPlayer.volume(15);  //Set volume value (0 to 30)
+  myDFPlayer.volume(18);  //Set volume value (0 to 30)
   myDFPlayer.EQ(DFPLAYER_EQ_ROCK);
 
   // STARTUP SOUND AND CHASE
-  myDFPlayer.playFolder(1, 1);  //Play flux capacitor sound
+  //myDFPlayer.playFolder(1, 1);  //Play flux capacitor sound
+  myDFPlayer.loopFolder(1);
   delay(200);
   radChase2 = 1;
-  //movieSpeed = 22.97;
-  //movieChase = 1;
+  movieSpeed = 22.97;
   // End DFPLayer Setup
 
   // IR setup
@@ -145,7 +146,51 @@ void setup() {
 }
 
 void loop() {
+
+  //Speedometer to Flux Capacitor Control  
+  int sensorValue = analogRead(analogPin); //Read Speedometer Input Voltage
+
+  if (sensorValue >= threshold) {
+    unsigned long startTime = millis();
+    //run this code for 3000 millseconds
+    while (millis() - startTime < 3000) {
+    FastLED.setBrightness(MAX_BRIGHT);
+    // Move LEDS
+    for (int i = 0; i < 10; i = i + 1) {
+
+      if(i < 9) {
+        leds[i] = CHSV(28, 170, 120);
+        leds[i - 1] = CHSV(28, 170, 30);
+        leds[i + 1] = CHSV(28, 170, 30);
+        leds[10] = CHSV(160, 64, 255);
+        leds[11] = CHSV(160, 64, 255);
+        leds[12] = CHSV(160, 64, 255);
+        leds[13] = CHSV(160, 64, 255);
+        leds[14] = CHSV(160, 64, 255);
+        leds[15] = CHSV(160, 64, 255);
+        leds[16] = CHSV(160, 64, 255);
+        leds[17] = CHSV(160, 64, 255);
+        leds[18] = CHSV(160, 64, 255);
+        leds[19] = CHSV(160, 64, 255);
+        leds[20] = CHSV(160, 64, 255);
+        leds[21] = CHSV(160, 64, 255);
+        FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
+      }
+      
+      // Single LED
+      digitalWrite(12, HIGH);
+      }
+      //This runs immediately after the 3 seconds expire
+      radChase2 = 1;
+    } 
+    Serial.println("88 MPH, initating Flux Capacitor");    
   
+  } else {
+    timeTravel = 0;
+  }
+
   while (!IrReceiver.isIdle());  // if not idle, wait till complete
 
   unsigned long lastPressTime = 0;
@@ -176,8 +221,8 @@ void loop() {
           Serial.println("Pressed 0");
           Serial.println("Playing Flux Sound");
           myDFPlayer.stop();
-          myDFPlayer.volume(15);  //Set volume value (0 to 30)
-          myDFPlayer.playFolder(1, 1);  //Play flux capacitor sound
+          myDFPlayer.volume(18);  //Set volume value (0 to 30)
+          myDFPlayer.loopFolder(1);  //Play flux capacitor sound (continuous)
           delaySpeed = 20;
           break;
           
@@ -326,7 +371,6 @@ void loop() {
           myDFPlayer.stop();
           myDFPlayer.volume(25);  //Set volume value (0 to 30)
           myDFPlayer.loopFolder(2);
-          myDFPlayer.enableLoop();
           delaySpeed = 20;
           break;
       
@@ -388,234 +432,51 @@ void loop() {
     IrReceiver.resume();
   }
 
-  //Speedometer to Flux Capacitor Control  
-  int sensorValue = analogRead(analogPin); //Read Speedometer Input Voltage
-
-  if (sensorValue >= threshold) {
-    for (int i = 0; i < 10; i++) {
-
-        FastLED.setBrightness(MAX_BRIGHT);
-        leds[i] = CHSV(28, 170, 100);
-        leds[10] = CRGB::White;
-        leds[11] = CRGB::White;
-        leds[12] = CRGB::White;
-        leds[13] = CRGB::White;
-        leds[14] = CRGB::White;
-        leds[15] = CRGB::White;
-        leds[16] = CRGB::White;
-        leds[17] = CRGB::White;
-        leds[18] = CRGB::White;
-        leds[19] = CRGB::White;
-        leds[20] = CRGB::White;
-        leds[21] = CRGB::White;
-        
-       FastLED.show();
-      }
-     
-      // Single LED
-      digitalWrite(12, HIGH);
-      delay(300);
-      FastLED.clear();
-      FastLED.show();
-      
-      // Single LED
-      digitalWrite(12, LOW);
-      delay(400);
-
-      // Second Burst
-      for (int i = 0; i < 21; i++) {
-        FastLED.setBrightness(MAX_BRIGHT);
-        leds[i] = CHSV(28, 170, 100);
-        leds[10] = CRGB::White;
-        leds[11] = CRGB::White;
-        leds[12] = CRGB::White;
-        leds[13] = CRGB::White;
-        leds[14] = CRGB::White;
-        leds[15] = CRGB::White;
-        leds[16] = CRGB::White;
-        leds[17] = CRGB::White;
-        leds[18] = CRGB::White;
-        leds[19] = CRGB::White;
-        leds[20] = CRGB::White;
-        leds[21] = CRGB::White;
-        FastLED.show();
-      }
-      
-      // Single LED
-      digitalWrite(12, HIGH);
-      delay(1000);
-      delaySpeed = 80;
-      timeTravel = 0;
-      radChase2 = 1;
-      FastLED.clear();
-      FastLED.show();
-      
-      // Single LED
-      digitalWrite(12, LOW);
-      FastLED.setBrightness(BRIGHTNESS);
-      //          chase();
-      //          exit(0);
-      //          reset();    
-  }
-    Serial.println("88 MPH, initating Flux Capacitor");
-  
-
-  delay(100);
-
-  //-----------------TimeTravel (Button 1)------------------------
+//-----------------TimeTravel (Button 1)------------------------
 
   if (timeTravel == 1) {
 
-    unsigned long currentTime = millis();
-
-    FastLED.setBrightness(BRIGHTNESS);
+    unsigned long startTime = millis();
+    //run this code for 3000 millseconds
+    while (millis() - startTime < 3000) {
+    FastLED.setBrightness(MAX_BRIGHT);
     // Move LEDS
-    for (int i = 0; i < 20; i = i + 1) {
+    for (int i = 0; i < 10; i = i + 1) {
 
-      if (i - 6 >= 0) {
-        leds[i - 6] = CHSV(28, 170, 60);
-      }
-      if (i - 5 >= 0) {
-        leds[i - 5] = CHSV(28, 170, 100);
-      }
-      if (i - 4 >= 0) {
-        leds[i - 4] = CHSV(28, 170, 160);
-      }
-      if (i - 3 >= 0) {
-        leds[i - 3] = CHSV(28, 170, 220);
-      }
-      if (i - 2 >= 0) {
-        leds[i - 2] = CHSV(28, 170, 160);
-      }
-      if (i - 1 >= 0) {
-        leds[i - 1] = CHSV(28, 170, 100);
-      }
-      leds[i] = CHSV(28, 170, 60);
-      leds[10] = CRGB::Black;
-      leds[11] = CRGB::Black;
-      leds[12] = CRGB::Black;
-      leds[13] = CRGB::Black;
-      leds[14] = CRGB::Black;
-      leds[15] = CRGB::Black;
-      leds[16] = CRGB::Black;
-      leds[17] = CRGB::Black;
-      leds[18] = CRGB::Black;
-      leds[19] = CRGB::Black;
-      leds[20] = CRGB::Black;
-      leds[21] = CRGB::Black;
-
-
-      // Show the leds
-
-      FastLED.show();
-
-      FastLED.clear();
-      timeTravel = 1;
-
-      // Wait a little bit
-      delay(delaySpeed);
-
-    }
-
-    // Reduce delay time so each sequence is faster than the last
-    delaySpeed = delaySpeed * .837;
-
-    if (delaySpeed < 1) {
-      // leds[5] = CRGB::Black;
-
-      previousTime = millis();
-
-      if (millis() < previousTime + 4000) {
-        // ZIIIP!  Moment of time travel
-                
-        digitalWrite(12, HIGH);
-        for(int y = 0; y < 22; y++) {
-          FastLED.setBrightness(MAX_BRIGHT);
-          leds[y] = CRGB::White;
-          FastLED.show();
-          }
-                
-          delay(3300);
-          FastLED.clear();
-          FastLED.show();
-          //for(int x = 0; x < 9; x++) {
-          //leds[x] = CRGB::Black;
-          //FastLED.show();
-          //}
-          // Single LED
-          digitalWrite(12, LOW);
-          // Delay after white light
-          delay(850);
-        }
-      // First Burst
-      for (int i = 0; i < 10; i++) {
-        FastLED.setBrightness(MAX_BRIGHT);
-        leds[i] = CHSV(28, 170, 100);
-        leds[10] = CRGB::White;
-        leds[11] = CRGB::White;
-        leds[12] = CRGB::White;
-        leds[13] = CRGB::White;
-        leds[14] = CRGB::White;
-        leds[15] = CRGB::White;
-        leds[16] = CRGB::White;
-        leds[17] = CRGB::White;
-        leds[18] = CRGB::White;
-        leds[19] = CRGB::White;
-        leds[20] = CRGB::White;
-        leds[21] = CRGB::White;
-        
-       FastLED.show();
-      }
-     
-      // Single LED
-      digitalWrite(12, HIGH);
-      delay(300);
-      FastLED.clear();
-      FastLED.show();
-      // Single LED
-      digitalWrite(12, LOW);
-      delay(400);
-
-      // Second Burst
-      for (int i = 0; i < 21; i++) {
-        FastLED.setBrightness(MAX_BRIGHT);
-        leds[i] = CHSV(28, 170, 100);
-        leds[10] = CRGB::White;
-        leds[11] = CRGB::White;
-        leds[12] = CRGB::White;
-        leds[13] = CRGB::White;
-        leds[14] = CRGB::White;
-        leds[15] = CRGB::White;
-        leds[16] = CRGB::White;
-        leds[17] = CRGB::White;
-        leds[18] = CRGB::White;
-        leds[19] = CRGB::White;
-        leds[20] = CRGB::White;
-        leds[21] = CRGB::White;
+      if(i < 9) {
+        leds[i] = CHSV(28, 170, 120);
+        leds[i - 1] = CHSV(28, 170, 30);
+        leds[i + 1] = CHSV(28, 170, 30);
+        leds[10] = CHSV(160, 64, 255);
+        leds[11] = CHSV(160, 64, 255);
+        leds[12] = CHSV(160, 64, 255);
+        leds[13] = CHSV(160, 64, 255);
+        leds[14] = CHSV(160, 64, 255);
+        leds[15] = CHSV(160, 64, 255);
+        leds[16] = CHSV(160, 64, 255);
+        leds[17] = CHSV(160, 64, 255);
+        leds[18] = CHSV(160, 64, 255);
+        leds[19] = CHSV(160, 64, 255);
+        leds[20] = CHSV(160, 64, 255);
+        leds[21] = CHSV(160, 64, 255);
         FastLED.show();
+        delay(movieSpeed);
+        FastLED.clear();
       }
       
       // Single LED
       digitalWrite(12, HIGH);
-      delay(1000);
-      delaySpeed = 80;
-      timeTravel = 0;
+      }
+      //This runs immediately after the 3 seconds expire
       radChase2 = 1;
-      FastLED.clear();
-      FastLED.show();
-      // Single LED
-      digitalWrite(12, LOW);
-      FastLED.setBrightness(BRIGHTNESS);
-      //          chase();
-      //          exit(0);
-      //          reset();
-    }
+    } 
   } 
   // ----------------- END timeTravel ------------------------------
 
   //-----------------SMOOTH CHASE (Button 2)------------------------
 
   if (smoothChase == 1) {
+    digitalWrite(12, LOW);
     timeTravel = 0;
 
     // delaySpeed = 80;
@@ -703,6 +564,7 @@ void loop() {
 
   if (thirtyChase == 1) {
 
+    digitalWrite(12, LOW);
     timeTravel = 0;
     smoothChase = 0;
 
@@ -752,6 +614,7 @@ void loop() {
   //----------------- MOVIE CHASE (Button 4) - imitates 6 LEDs - matches 24FPS speed from the movie------------------------
 
   if (movieChase == 1) {
+    digitalWrite(12, LOW);
     timeTravel = 0;
     smoothChase = 0;
     FastLED.setBrightness(BRIGHTNESS);
@@ -820,6 +683,7 @@ void loop() {
 
   if (movieChaseSimple == 1) {
 
+    digitalWrite(12, LOW);
     timeTravel = 0;
     smoothChase = 0;
  
@@ -861,6 +725,7 @@ void loop() {
 
   if (radChase == 1) {
 
+    digitalWrite(12, LOW);
     timeTravel = 0;
     smoothChase = 0;
 
@@ -913,6 +778,7 @@ void loop() {
 
   if (radChase2 == 1) {
 
+    digitalWrite(12, LOW);
     timeTravel = 0;
     smoothChase = 0;
 
